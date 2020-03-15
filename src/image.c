@@ -306,6 +306,10 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 free_image(resized_mask);
                 free_image(tmask);
             }
+
+            char img_name[32]; // 32 bytes allows for over 99 trillion potential images.
+            sprintf(img_name, "Detection %d.jpg", *detection_count);
+            save_image_cv(im, img_name);
         }
     }
 }

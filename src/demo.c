@@ -33,7 +33,7 @@ static float **predictions;
 static float *avg;
 static int demo_done = 0;
 static int demo_total = 0;
-static int test_count = 0;
+static int detection_count = 0;
 double demo_time;
 
 detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
@@ -103,7 +103,7 @@ void *detect_in_thread(void *ptr)
     printf("\nFPS:%.1f\n",fps);
     printf("Objects:\n\n");
     image display = buff[(buff_index+2) % 3];
-    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &test_count);
+    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count);
     free_detections(dets, nboxes);
 
     demo_index = (demo_index + 1)%demo_frame;
@@ -125,7 +125,7 @@ void *fetch_in_thread(void *ptr)
 
 void *display_in_thread(void *ptr)
 {
-    int c = show_image(buff[(buff_index + 1)%3], "test", 1);
+    int c = show_image(buff[(buff_index + 1)%3], "Demo", 1);
     if (c != -1) c = c%256;
     if (c == 27) {
         demo_done = 1;
@@ -192,7 +192,7 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
 
     int count = 0;
     if(!prefix){
-        make_window("test", 200, 200, fullscreen);
+        make_window("Demo", 200, 200, fullscreen);
     }
 
     demo_time = what_time_is_it_now();
@@ -213,7 +213,7 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
         pthread_join(detect_thread, 0);
         ++count;
     }
-    printf("Detections above the minimum confidence score of %.1f%%: %d\n", (thresh*100.0), test_count);
+    printf("Detections above the minimum confidence score of %.1f%%: %d\n", (thresh*100.0), detection_count);
 }
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen)

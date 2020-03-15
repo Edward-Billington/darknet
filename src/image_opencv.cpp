@@ -130,6 +130,12 @@ void make_window(char *name, int w, int h, int fullscreen)
     }
 }
 
+void save_image_cv(image im, char *name)
+{
+    Mat m = image_to_mat(im);
+    imwrite(name, m);
+}
+
 }
 
 #endif
