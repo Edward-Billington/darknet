@@ -601,7 +601,8 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         //printf("%d\n", nboxes);
         //if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
         if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
+        int detection_count = 0;
+        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes, &detection_count);
         free_detections(dets, nboxes);
         if(outfile){
             save_image(im, outfile);
@@ -789,7 +790,7 @@ void network_detect(network *net, image im, float thresh, float hier_thresh, flo
 void run_detector(int argc, char **argv)
 {
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
-    float thresh = find_float_arg(argc, argv, "-thresh", .5);
+    float thresh = find_float_arg(argc, argv, "-thresh", .8);
     float hier_thresh = find_float_arg(argc, argv, "-hier", .5);
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int frame_skip = find_int_arg(argc, argv, "-s", 0);
@@ -847,6 +848,9 @@ void run_detector(int argc, char **argv)
             demo(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
         } else {
             printf("Saving Version Running\n");
+            if (filename) {
+                demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
+	        }
         }
     } else {
         printf("\"%s\" is not a valid argument\n", argv[2]);

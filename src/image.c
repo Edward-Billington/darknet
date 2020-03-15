@@ -236,7 +236,7 @@ image **load_alphabet()
     return alphabets;
 }
 
-void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes)
+void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count)
 {
     int i,j;
 
@@ -252,6 +252,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                     strcat(labelstr, ", ");
                     strcat(labelstr, names[j]);
                 }
+                (*detection_count)++;
                 printf("%s: %.0f%%\n", names[j], dets[i].prob[j]*100);
             }
         }

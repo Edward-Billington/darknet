@@ -33,6 +33,7 @@ static float **predictions;
 static float *avg;
 static int demo_done = 0;
 static int demo_total = 0;
+static int test_count = 0;
 double demo_time;
 
 detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
@@ -90,37 +91,10 @@ void *detect_in_thread(void *ptr)
     layer l = net->layers[net->n-1];
     float *X = buff_letter[(buff_index+2)%3].data;
     network_predict(net, X);
-
-    /*
-       if(l.type == DETECTION){
-       get_detection_boxes(l, 1, 1, demo_thresh, probs, boxes, 0);
-       } else */
     remember_network(net);
     detection *dets = 0;
     int nboxes = 0;
     dets = avg_predictions(net, &nboxes);
-
-
-    /*
-       int i,j;
-       box zero = {0};
-       int classes = l.classes;
-       for(i = 0; i < demo_detections; ++i){
-       avg[i].objectness = 0;
-       avg[i].bbox = zero;
-       memset(avg[i].prob, 0, classes*sizeof(float));
-       for(j = 0; j < demo_frame; ++j){
-       axpy_cpu(classes, 1./demo_frame, dets[j][i].prob, 1, avg[i].prob, 1);
-       avg[i].objectness += dets[j][i].objectness * 1./demo_frame;
-       avg[i].bbox.x += dets[j][i].bbox.x * 1./demo_frame;
-       avg[i].bbox.y += dets[j][i].bbox.y * 1./demo_frame;
-       avg[i].bbox.w += dets[j][i].bbox.w * 1./demo_frame;
-       avg[i].bbox.h += dets[j][i].bbox.h * 1./demo_frame;
-       }
-    //copy_cpu(classes, dets[0][i].prob, 1, avg[i].prob, 1);
-    //avg[i].objectness = dets[0][i].objectness;
-    }
-     */
 
     if (nms > 0) do_nms_obj(dets, nboxes, l.classes, nms);
 
@@ -129,7 +103,7 @@ void *detect_in_thread(void *ptr)
     printf("\nFPS:%.1f\n",fps);
     printf("Objects:\n\n");
     image display = buff[(buff_index+2) % 3];
-    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes);
+    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &test_count);
     free_detections(dets, nboxes);
 
     demo_index = (demo_index + 1)%demo_frame;
@@ -151,7 +125,7 @@ void *fetch_in_thread(void *ptr)
 
 void *display_in_thread(void *ptr)
 {
-    int c = show_image(buff[(buff_index + 1)%3], "Demo", 1);
+    int c = show_image(buff[(buff_index + 1)%3], "test", 1);
     if (c != -1) c = c%256;
     if (c == 27) {
         demo_done = 1;
@@ -182,6 +156,64 @@ void *detect_loop(void *ptr)
     while(1){
         detect_in_thread(0);
     }
+}
+
+void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen)
+{
+    image **alphabet = load_alphabet();
+    demo_names = names;
+    demo_alphabet = alphabet;
+    demo_classes = classes;
+    demo_thresh = thresh;
+    demo_hier = hier;
+    printf("Demo\n");
+    net = load_network(cfgfile, weightfile, 0);
+    set_batch_network(net, 1);
+    pthread_t detect_thread;
+    pthread_t fetch_thread;
+
+    srand(2222222);
+
+    int i;
+    demo_total = size_network(net);
+    predictions = calloc(demo_frame, sizeof(float*));
+    for (i = 0; i < demo_frame; ++i){
+        predictions[i] = calloc(demo_total, sizeof(float));
+    }
+    avg = calloc(demo_total, sizeof(float));
+    cap = open_video_stream(filename, 0, 0, 0, 0);
+
+    buff[0] = get_image_from_stream(cap);
+    buff[1] = copy_image(buff[0]);
+    buff[2] = copy_image(buff[0]);
+    buff_letter[0] = letterbox_image(buff[0], net->w, net->h);
+    buff_letter[1] = letterbox_image(buff[0], net->w, net->h);
+    buff_letter[2] = letterbox_image(buff[0], net->w, net->h);
+
+    int count = 0;
+    if(!prefix){
+        make_window("test", 200, 200, fullscreen);
+    }
+
+    demo_time = what_time_is_it_now();
+    while(!demo_done){
+        buff_index = (buff_index + 1) %3;
+        if(pthread_create(&fetch_thread, 0, fetch_in_thread, 0)) error("Thread creation failed");
+        if(pthread_create(&detect_thread, 0, detect_in_thread, 0)) error("Thread creation failed");
+        if(!prefix){
+            fps = 1./(what_time_is_it_now() - demo_time);
+            demo_time = what_time_is_it_now();
+            display_in_thread(0);
+        }else{
+            char name[256];
+            sprintf(name, "%s_%08d", prefix, count);
+            save_image(buff[(buff_index + 1)%3], name);
+        }
+        pthread_join(fetch_thread, 0);
+        pthread_join(detect_thread, 0);
+        ++count;
+    }
+    printf("Detections above the minimum confidence score of %.1f%%: %d\n", (thresh*100.0), test_count);
 }
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen)
