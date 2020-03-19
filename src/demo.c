@@ -103,7 +103,8 @@ void *detect_in_thread(void *ptr)
     printf("\nFPS:%.1f\n",fps);
     printf("Objects:\n\n");
     image display = buff[(buff_index+2) % 3];
-    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count);
+    int save_mode_enabled = 1;
+    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, save_mode_enabled);
     free_detections(dets, nboxes);
 
     demo_index = (demo_index + 1)%demo_frame;
@@ -192,7 +193,7 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
 
     int count = 0;
     if(!prefix){
-        make_window("Demo", 200, 200, fullscreen);
+        make_window("Demo", 250, 250, fullscreen);
     }
 
     demo_time = what_time_is_it_now();

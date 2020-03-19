@@ -236,7 +236,7 @@ image **load_alphabet()
     return alphabets;
 }
 
-void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count)
+void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode)
 {
     int i,j;
 
@@ -254,32 +254,27 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 }
                 (*detection_count)++;
                 printf("%s: %.0f%%\n", names[j], dets[i].prob[j]*100);
+
+                if (1 == save_mode) {
+                    char img_name[32];
+                    char* folder_name = "screenshots";
+                    sprintf(img_name, "%s/%s detection %d.jpg", folder_name, names[j], *detection_count);
+                    save_image_cv(im, img_name);
+                }
             }
         }
         if(class >= 0){
             int width = im.h * .006;
-
-            /*
-               if(0){
-               width = pow(prob, 1./2.)*10+1;
-               alphabet = 0;
-               }
-             */
-
-            //printf("%d %s: %.0f%%\n", i, names[class], prob*100);
             int offset = class*123457 % classes;
             float red = get_color(2,offset,classes);
             float green = get_color(1,offset,classes);
             float blue = get_color(0,offset,classes);
             float rgb[3];
 
-            //width = prob*20+2;
-
             rgb[0] = red;
             rgb[1] = green;
             rgb[2] = blue;
             box b = dets[i].bbox;
-            //printf("%f %f %f %f\n", b.x, b.y, b.w, b.h);
 
             int left  = (b.x-b.w/2.)*im.w;
             int right = (b.x+b.w/2.)*im.w;
@@ -306,10 +301,6 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 free_image(resized_mask);
                 free_image(tmask);
             }
-
-            char img_name[32]; // 32 bytes allows for over 99 trillion potential images.
-            sprintf(img_name, "Detection %d.jpg", *detection_count);
-            save_image_cv(im, img_name);
         }
     }
 }

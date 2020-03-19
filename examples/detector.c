@@ -602,7 +602,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         //if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
         if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
         int detection_count = 0;
-        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes, &detection_count);
+        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes, &detection_count, 0);
         free_detections(dets, nboxes);
         if(outfile){
             save_image(im, outfile);
@@ -790,7 +790,7 @@ void network_detect(network *net, image im, float thresh, float hier_thresh, flo
 void run_detector(int argc, char **argv)
 {
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
-    float thresh = find_float_arg(argc, argv, "-thresh", .75);
+    float thresh = find_float_arg(argc, argv, "-thresh", .99);
     float hier_thresh = find_float_arg(argc, argv, "-hier", .5);
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int frame_skip = find_int_arg(argc, argv, "-s", 0);
