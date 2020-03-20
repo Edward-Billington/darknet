@@ -239,6 +239,7 @@ image **load_alphabet()
 void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode)
 {
     int i,j;
+    size_t max_char_size = 80;
 
     for(i = 0; i < num; ++i){
         char labelstr[4096] = {0};
@@ -252,13 +253,15 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                     strcat(labelstr, ", ");
                     strcat(labelstr, names[j]);
                 }
+
                 (*detection_count)++;
                 printf("%s: %.0f%%\n", names[j], dets[i].prob[j]*100);
 
-                if (1 == save_mode) {
-                    char img_name[32];
-                    char* folder_name = "screenshots";
-                    sprintf(img_name, "%s/%s detection %d.jpg", folder_name, names[j], *detection_count);
+                // Without Label.                
+                // Class names above 85 characters live will cause issues therefore are ignored.
+                if (1 == save_mode && (strlen(names[j]) < max_char_size)) {
+                    char img_name[128];
+                    sprintf(img_name, "screenshots/%s detection %d.jpg", names[j], *detection_count);
                     save_image_cv(im, img_name);
                 }
             }
@@ -300,6 +303,13 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 free_image(mask);
                 free_image(resized_mask);
                 free_image(tmask);
+            }
+
+            // With Label
+            if (1 == save_mode && (strlen(labelstr) < max_char_size)) {
+                char img_name[128];
+                sprintf(img_name, "screenshots/label/%s detection %d.jpg", labelstr, *detection_count);
+                save_image_cv(im, img_name);
             }
         }
     }
