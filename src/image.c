@@ -262,7 +262,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 if (1 == save_mode && (strlen(names[j]) < max_char_size)) {
                     char img_name[128];
                     sprintf(img_name, "screenshots/%s detection %d.jpg", names[j], *detection_count);
-                    save_image_cv(im, img_name);
+                    // save_image_cv(im, img_name);
                 }
             }
         }
@@ -309,7 +309,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
             if (1 == save_mode && (strlen(labelstr) < max_char_size)) {
                 char img_name[128];
                 sprintf(img_name, "screenshots/label/%s detection %d.jpg", labelstr, *detection_count);
-                save_image_cv(im, img_name);
+                // save_image_cv(im, img_name);
             }
         }
     }

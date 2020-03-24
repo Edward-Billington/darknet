@@ -1,4 +1,6 @@
 #include "darknet.h"
+#include <dirent.h>
+#include <unistd.h>
 
 static int coco_ids[] = {1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90};
 
@@ -621,172 +623,6 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     }
 }
 
-/*
-void censor_detector(char *datacfg, char *cfgfile, char *weightfile, int cam_index, const char *filename, int class, float thresh, int skip)
-{
-#ifdef OPENCV
-    char *base = basecfg(cfgfile);
-    network *net = load_network(cfgfile, weightfile, 0);
-    set_batch_network(net, 1);
-
-    srand(2222222);
-    CvCapture * cap;
-
-    int w = 1280;
-    int h = 720;
-
-    if(filename){
-        cap = cvCaptureFromFile(filename);
-    }else{
-        cap = cvCaptureFromCAM(cam_index);
-    }
-
-    if(w){
-        cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_WIDTH, w);
-    }
-    if(h){
-        cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_HEIGHT, h);
-    }
-
-    if(!cap) error("Couldn't connect to webcam.\n");
-    cvNamedWindow(base, CV_WINDOW_NORMAL); 
-    cvResizeWindow(base, 512, 512);
-    float fps = 0;
-    int i;
-    float nms = .45;
-
-    while(1){
-        image in = get_image_from_stream(cap);
-        //image in_s = resize_image(in, net->w, net->h);
-        image in_s = letterbox_image(in, net->w, net->h);
-        layer l = net->layers[net->n-1];
-
-        float *X = in_s.data;
-        network_predict(net, X);
-        int nboxes = 0;
-        detection *dets = get_network_boxes(net, in.w, in.h, thresh, 0, 0, 0, &nboxes);
-        //if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-        if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-
-        for(i = 0; i < nboxes; ++i){
-            if(dets[i].prob[class] > thresh){
-                box b = dets[i].bbox;
-                int left  = b.x-b.w/2.;
-                int top   = b.y-b.h/2.;
-                censor_image(in, left, top, b.w, b.h);
-            }
-        }
-        show_image(in, base);
-        cvWaitKey(10);
-        free_detections(dets, nboxes);
-
-
-        free_image(in_s);
-        free_image(in);
-
-
-        float curr = 0;
-        fps = .9*fps + .1*curr;
-        for(i = 0; i < skip; ++i){
-            image in = get_image_from_stream(cap);
-            free_image(in);
-        }
-    }
-    #endif
-}
-
-void extract_detector(char *datacfg, char *cfgfile, char *weightfile, int cam_index, const char *filename, int class, float thresh, int skip)
-{
-#ifdef OPENCV
-    char *base = basecfg(cfgfile);
-    network *net = load_network(cfgfile, weightfile, 0);
-    set_batch_network(net, 1);
-
-    srand(2222222);
-    CvCapture * cap;
-
-    int w = 1280;
-    int h = 720;
-
-    if(filename){
-        cap = cvCaptureFromFile(filename);
-    }else{
-        cap = cvCaptureFromCAM(cam_index);
-    }
-
-    if(w){
-        cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_WIDTH, w);
-    }
-    if(h){
-        cvSetCaptureProperty(cap, CV_CAP_PROP_FRAME_HEIGHT, h);
-    }
-
-    if(!cap) error("Couldn't connect to webcam.\n");
-    cvNamedWindow(base, CV_WINDOW_NORMAL); 
-    cvResizeWindow(base, 512, 512);
-    float fps = 0;
-    int i;
-    int count = 0;
-    float nms = .45;
-
-    while(1){
-        image in = get_image_from_stream(cap);
-        //image in_s = resize_image(in, net->w, net->h);
-        image in_s = letterbox_image(in, net->w, net->h);
-        layer l = net->layers[net->n-1];
-
-        show_image(in, base);
-
-        int nboxes = 0;
-        float *X = in_s.data;
-        network_predict(net, X);
-        detection *dets = get_network_boxes(net, in.w, in.h, thresh, 0, 0, 1, &nboxes);
-        //if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-        if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-
-        for(i = 0; i < nboxes; ++i){
-            if(dets[i].prob[class] > thresh){
-                box b = dets[i].bbox;
-                int size = b.w*in.w > b.h*in.h ? b.w*in.w : b.h*in.h;
-                int dx  = b.x*in.w-size/2.;
-                int dy  = b.y*in.h-size/2.;
-                image bim = crop_image(in, dx, dy, size, size);
-                char buff[2048];
-                sprintf(buff, "results/extract/%07d", count);
-                ++count;
-                save_image(bim, buff);
-                free_image(bim);
-            }
-        }
-        free_detections(dets, nboxes);
-
-
-        free_image(in_s);
-        free_image(in);
-
-
-        float curr = 0;
-        fps = .9*fps + .1*curr;
-        for(i = 0; i < skip; ++i){
-            image in = get_image_from_stream(cap);
-            free_image(in);
-        }
-    }
-    #endif
-}
-*/
-
-/*
-void network_detect(network *net, image im, float thresh, float hier_thresh, float nms, detection *dets)
-{
-    network_predict_image(net, im);
-    layer l = net->layers[net->n-1];
-    int nboxes = num_boxes(net);
-    fill_network_boxes(net, im.w, im.h, thresh, hier_thresh, 0, 0, dets);
-    if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-}
-*/
-
 void run_detector(int argc, char **argv)
 {
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
@@ -795,15 +631,18 @@ void run_detector(int argc, char **argv)
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int frame_skip = find_int_arg(argc, argv, "-s", 0);
     int avg = find_int_arg(argc, argv, "-avg", 3);
+
     if(argc < 4){
         fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
         return;
     }
+
     char *gpu_list = find_char_arg(argc, argv, "-gpus", 0);
     char *outfile = find_char_arg(argc, argv, "-out", 0);
     int *gpus = 0;
     int gpu = 0;
     int ngpus = 0;
+
     if(gpu_list){
         printf("%s\n", gpu_list);
         int len = strlen(gpu_list);
@@ -828,7 +667,6 @@ void run_detector(int argc, char **argv)
     int width = find_int_arg(argc, argv, "-w", 0);
     int height = find_int_arg(argc, argv, "-h", 0);
     int fps = find_int_arg(argc, argv, "-fps", 0);
-    //int class = find_int_arg(argc, argv, "-class", 0);
 
     char *datacfg = argv[3];
     char *cfg = argv[4];
@@ -838,7 +676,7 @@ void run_detector(int argc, char **argv)
     else if(0==strcmp(argv[2], "train")) train_detector(datacfg, cfg, weights, gpus, ngpus, clear);
     else if(0==strcmp(argv[2], "valid")) validate_detector(datacfg, cfg, weights, outfile);
     else if(0==strcmp(argv[2], "valid2")) validate_detector_flip(datacfg, cfg, weights, outfile);
-    else if(0==strcmp(argv[2], "recall")) validate_detector_recall(cfg, weights);    
+    else if(0==strcmp(argv[2], "recall")) validate_detector_recall(cfg, weights);
     else if(0==strcmp(argv[2], "demo")) {
         list *options = read_data_cfg(datacfg);
         int classes = option_find_int(options, "classes", 20);
@@ -847,14 +685,63 @@ void run_detector(int argc, char **argv)
         if(!find_arg(argc, argv, "-save")){
             demo(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
         } else {
-            printf("Saving Version Running\n");
+            printf("Save Version Running\n");
+            char *folder_name = find_char_arg(argc, argv, "-folder", 0);
+            if (folder_name) {
+                DIR *folder = opendir(folder_name);
+                if (NULL == folder) {
+                    printf("Folder doesn\'t exist %s\n", folder_name);
+                    return;
+                } else {
+                    printf("FOLDER ENTERED: %s\n", folder_name);
+                    const int max_files = 8;
+                    const int max_filename_length = 128;
+                    struct dirent *dir;
+                    char files[max_files][max_filename_length]; // Files to be processed
+                    int current_file = 0;
+
+                    // Assign all strings to empty, used for checking later.
+                    for(int i = 0; i < max_files; i++) {
+                        strcpy(files[i], "");
+                    }
+
+                    // Read all files from the directory specified
+                    while ((dir = readdir(folder)) != NULL) {
+                        char *name = dir->d_name;
+
+                        // File must be .mp4
+                        if (strstr(name, ".mp4") != NULL) {
+                            char full_path[max_filename_length];
+
+                            // Check for array overflow
+                            if (current_file >= max_files) {
+                                printf("Could not include file: %s, maximum is %d\n", full_path, max_files);
+                            } else {
+                                sprintf(full_path, "%s/%s", folder_name, name);
+                                strcpy(files[current_file], full_path);
+                                ++current_file;
+                            }
+                        }
+                    }
+
+                    // USE LATER
+                    // for(int i = 0; i < max_files; i++) {
+                    //     if (strcmp(files[i], "")) {
+                    //         printf("%s\n", files[i]);
+                    //     }
+                    // }
+
+                    demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, files);
+
+                    // printf("TEST TEST TEST %s, %s\n", files[0], files[1]);
+                    return;
+                }
+            }
             if (filename) {
-                demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
-	        }
+                demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, NULL);
+            }
         }
     } else {
         printf("\"%s\" is not a valid argument\n", argv[2]);
     }
-    //else if(0==strcmp(argv[2], "extract")) extract_detector(datacfg, cfg, weights, cam_index, filename, class, thresh, frame_skip);
-    //else if(0==strcmp(argv[2], "censor")) censor_detector(datacfg, cfg, weights, cam_index, filename, class, thresh, frame_skip);
 }
