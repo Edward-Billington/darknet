@@ -159,7 +159,7 @@ void *detect_loop(void *ptr)
     }
 }
 
-void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen)
+void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen, char filenames[8][128])
 {
     image **alphabet = load_alphabet();
     demo_names = names;
@@ -175,7 +175,6 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
     save_mode = 1; // This is to enable saving the images - only in save mode.
 
     srand(2222222);
-
     int i;
     demo_total = size_network(net);
     predictions = calloc(demo_frame, sizeof(float*));
@@ -184,46 +183,89 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
     }
     avg = calloc(demo_total, sizeof(float));
 
-    if(filename && (strcmp(filename, "/") != 0)){
-        printf("video file: %s\n", filename);
-        cap = open_video_stream(filename, 0, 0, 0, 0);
-    }else{
-        cap = open_video_stream(0, cam_index, w, h, frames);
-    }
-
-    if(!cap) error("Couldn't connect to webcam.\n");
-
-    buff[0] = get_image_from_stream(cap);
-    buff[1] = copy_image(buff[0]);
-    buff[2] = copy_image(buff[0]);
-    buff_letter[0] = letterbox_image(buff[0], net->w, net->h);
-    buff_letter[1] = letterbox_image(buff[0], net->w, net->h);
-    buff_letter[2] = letterbox_image(buff[0], net->w, net->h);
-
-    int count = 0;
-    if(!prefix){
-        make_window("Demo", 1352, 1013, fullscreen);
-    }
-
-    demo_time = what_time_is_it_now();
-    while(!demo_done){
-        buff_index = (buff_index + 1) %3;
-        if(pthread_create(&fetch_thread, 0, fetch_in_thread, 0)) error("Thread creation failed");
-        if(pthread_create(&detect_thread, 0, detect_in_thread, 0)) error("Thread creation failed");
-        if(!prefix){
-            fps = 1./(what_time_is_it_now() - demo_time);
-            demo_time = what_time_is_it_now();
-            display_in_thread(0);
+    if (filenames == NULL) {
+        if(filename && (strcmp(filename, "/") != 0)){
+            printf("video file: %s\n", filename);
+            cap = open_video_stream(filename, 0, 0, 0, 0);
         }else{
-            char name[256];
-            sprintf(name, "%s_%08d", prefix, count);
-            save_image(buff[(buff_index + 1)%3], name);
+            cap = open_video_stream(0, cam_index, w, h, frames);
         }
-        pthread_join(fetch_thread, 0);
-        pthread_join(detect_thread, 0);
-        ++count;
+
+        if(!cap) error("Couldn't connect to webcam.\n");
+
+        buff[0] = get_image_from_stream(cap);
+        buff[1] = copy_image(buff[0]);
+        buff[2] = copy_image(buff[0]);
+        buff_letter[0] = letterbox_image(buff[0], net->w, net->h);
+        buff_letter[1] = letterbox_image(buff[0], net->w, net->h);
+        buff_letter[2] = letterbox_image(buff[0], net->w, net->h);
+
+        int count = 0;
+        if(!prefix){
+            make_window("Demo", 1352, 1013, fullscreen);
+        }
+      
+        demo_time = what_time_is_it_now();
+    
+        while (!demo_done) {
+            buff_index = (buff_index + 1) %3;
+            if(pthread_create(&fetch_thread, 0, fetch_in_thread, 0)) error("Thread creation failed");
+            if(pthread_create(&detect_thread, 0, detect_in_thread, 0)) error("Thread creation failed");
+            if (!prefix) {
+                fps = 1./(what_time_is_it_now() - demo_time);
+                demo_time = what_time_is_it_now();
+                display_in_thread(0);
+            } else {
+                char name[256];
+                sprintf(name, "%s_%08d", prefix, count);
+                save_image(buff[(buff_index + 1)%3], name);
+            }
+            pthread_join(fetch_thread, 0);
+            pthread_join(detect_thread, 0);
+            ++count;
+        }
+        printf("%d detections above the minimum confidence score of %.1f%%\n", detection_count, (thresh*100.0));
+    } else {
+        for(int i = 0; i < sizeof(filenames); i++) {
+            demo_done = 0;
+            buff_index = 0;
+            char *current_file = filenames[i];
+            
+            if (strcmp(current_file, "")) {
+                cap = open_video_stream(current_file, 0, 0, 0, 0);
+            
+                buff[0] = get_image_from_stream(cap);
+                buff[1] = copy_image(buff[0]);
+                buff[2] = copy_image(buff[0]);
+                buff_letter[0] = letterbox_image(buff[0], net->w, net->h);
+                buff_letter[1] = letterbox_image(buff[0], net->w, net->h);
+                buff_letter[2] = letterbox_image(buff[0], net->w, net->h);
+            
+                int count = 0;
+                demo_time = what_time_is_it_now();
+            
+                while (!demo_done) {
+                    buff_index = (buff_index + 1) %3;
+                    if(pthread_create(&fetch_thread, 0, fetch_in_thread, 0)) error("Thread creation failed");
+                    if(pthread_create(&detect_thread, 0, detect_in_thread, 0)) error("Thread creation failed");
+                    if (!prefix) {
+                        fps = 1./(what_time_is_it_now() - demo_time);
+                        demo_time = what_time_is_it_now();
+                        display_in_thread(0);
+                    } else {
+                        char name[256];
+                        sprintf(name, "%s_%08d", prefix, count);
+                        save_image(buff[(buff_index + 1)%3], name);
+                    }
+                    pthread_join(fetch_thread, 0);
+                    pthread_join(detect_thread, 0);
+                    ++count;
+                }
+            }
+        }
+
+        printf("%d detections above the minimum confidence score of %.1f%%\n", detection_count, (thresh*100.0));
     }
-    printf("Detections above the minimum confidence score of %.1f%%: %d\n", (thresh*100.0), detection_count);
 }
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen)
