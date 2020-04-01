@@ -183,6 +183,7 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
     }
     avg = calloc(demo_total, sizeof(float));
 
+    // Default case
     if (filenames == NULL) {
         if(filename && (strcmp(filename, "/") != 0)){
             printf("video file: %s\n", filename);
@@ -225,7 +226,7 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
             ++count;
         }
         printf("%d detections above the minimum confidence score of %.1f%%\n", detection_count, (thresh*100.0));
-    } else {
+    } else { // Case for the -folder flag, iterate over each
         for(int i = 0; i < sizeof(filenames); i++) {
             demo_done = 0;
             buff_index = 0;
