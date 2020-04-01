@@ -1,0 +1,10 @@
+IMAGE ANALYSIS:
+./darknet detector test cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights data/knife_image_3.jpg 
+
+WEBCAM SAVE PHOTOS:
+./darknet detector demo cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights %FILENAME -save
+
+WEBCAM SAVE PHOTOS THRESHOLD:
+./darknet detector demo cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights %FILENAME -save -thresh 0.99
+
+

@@ -34,6 +34,7 @@ static float *avg;
 static int demo_done = 0;
 static int demo_total = 0;
 static int detection_count = 0;
+static int save_mode = 0;
 double demo_time;
 
 detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
@@ -103,7 +104,7 @@ void *detect_in_thread(void *ptr)
     printf("\nFPS:%.1f\n",fps);
     printf("Objects:\n\n");
     image display = buff[(buff_index+2) % 3];
-    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, 1);
+    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, save_mode);
     free_detections(dets, nboxes);
 
     demo_index = (demo_index + 1)%demo_frame;
@@ -171,6 +172,8 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
     set_batch_network(net, 1);
     pthread_t detect_thread;
     pthread_t fetch_thread;
+    save_mode = 1; // This is to enable saving the images - only in save mode.
+
     srand(2222222);
     int i;
     demo_total = size_network(net);
@@ -180,21 +183,28 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
     }
     avg = calloc(demo_total, sizeof(float));
 
-    // This is the default case, like the original
     if (filenames == NULL) {
-        cap = open_video_stream(filename, 0, 0, 0, 0);    
+        if(filename && (strcmp(filename, "/") != 0)){
+            printf("video file: %s\n", filename);
+            cap = open_video_stream(filename, 0, 0, 0, 0);
+        }else{
+            cap = open_video_stream(0, cam_index, w, h, frames);
+        }
+
+        if(!cap) error("Couldn't connect to webcam.\n");
+
         buff[0] = get_image_from_stream(cap);
         buff[1] = copy_image(buff[0]);
         buff[2] = copy_image(buff[0]);
         buff_letter[0] = letterbox_image(buff[0], net->w, net->h);
         buff_letter[1] = letterbox_image(buff[0], net->w, net->h);
         buff_letter[2] = letterbox_image(buff[0], net->w, net->h);
-    
+
         int count = 0;
         if(!prefix){
-            // make_window("Demo", 200, 200, fullscreen);
+            make_window("Demo", 1352, 1013, fullscreen);
         }
-    
+      
         demo_time = what_time_is_it_now();
     
         while (!demo_done) {
