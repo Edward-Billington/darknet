@@ -183,8 +183,8 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
         predictions[i] = calloc(demo_total, sizeof(float));
     }
     avg = calloc(demo_total, sizeof(float));
-    
-    if(filename && (strcmp(filename, "test") != 0)){
+
+    if(filename && (strcmp(filename, "/") != 0)){
         printf("video file: %s\n", filename);
         cap = open_video_stream(filename, 0, 0, 0, 0);
     }else{
