@@ -1,0 +1,26 @@
+<DATA_FILE> = cfg/voc.data 
+<CFG_FILE> = cfg/yolov3-voc.cfg
+<WEIGHTS> = backup/yolov3-voc_final.weights
+<IMG_FILE> = data/knife_image_1.png
+<VIDEO_FILE> = data/knife_video.mp4
+<FOLDER> = data/
+
+ORIGINAL COMMANDS:
+Detect on an image file
+./darknet detector test <DATA_FILE> <CFG_FILE> <WEIGHTS> <IMG_FILE>
+
+Detect on a video file
+./darknet detector demo <DATA_FILE> <CFG_FILE> <WEIGHTS> <VIDEO_FILE>
+
+Detect on a webcam
+./darknet detector demo <DATA_FILE> <CFG_FILE> <WEIGHTS>
+
+NEW COMMANDS:
+Detect on a video file and save screenshots
+./darknet detector demo <DATA_FILE> <CFG_FILE> <WEIGHTS> <VIDEO_FILE> -save
+
+Detect on a webcam and save screenshots
+./darknet detector demo <DATA_FILE> <CFG_FILE> <WEIGHTS> / -save
+
+Detect on all files in a folder and save screenshots
+./darknet detector demo <DATA_FILE> <CFG_FILE> <WEIGHTS> <VIDEO_FILE> -save -folder <FOLDER>

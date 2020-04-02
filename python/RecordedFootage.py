@@ -9,6 +9,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
+import os
 
 class Ui_recordedFootageMenu(object):
     def __init__(self):
@@ -23,7 +24,7 @@ class Ui_recordedFootageMenu(object):
         self.centralwidget.setObjectName("centralwidget")
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setEnabled(False)
-        self.pushButton.setGeometry(QtCore.QRect(150, 170, 281, 61))
+        self.pushButton.setGeometry(QtCore.QRect(150, 190, 281, 61))
         font = QtGui.QFont()
         font.setPointSize(16)
         font.setBold(True)
@@ -59,7 +60,7 @@ class Ui_recordedFootageMenu(object):
         self.buttonLoadFolder.setGeometry(QtCore.QRect(360, 80, 75, 23))
         self.buttonLoadFolder.setObjectName("buttonLoadFolder")
         self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setGeometry(QtCore.QRect(150, 230, 441, 16))
+        self.label_4.setGeometry(QtCore.QRect(150, 250, 441, 16))
         self.label_4.setObjectName("label_4")
         self.labelThreshhold = QtWidgets.QLabel(self.centralwidget)
         self.labelThreshhold.setGeometry(QtCore.QRect(210, 120, 151, 21))
@@ -99,10 +100,10 @@ class Ui_recordedFootageMenu(object):
         recordedFootageMenu.setWindowTitle(_translate("recordedFootageMenu", "Recorded Footage"))
         self.pushButton.setText(_translate("recordedFootageMenu", "Select Option ^"))
         self.label.setText(_translate("recordedFootageMenu", "Make sure video files are .mp4 format!"))
-        self.buttonLoadVideo.setText(_translate("recordedFootageMenu", "Load Video"))
+        self.buttonLoadVideo.setText(_translate("recordedFootageMenu", "Video"))
         self.label_2.setText(_translate("recordedFootageMenu", "Process a single video:"))
         self.label_3.setText(_translate("recordedFootageMenu", "Process entire folder of videos:"))
-        self.buttonLoadFolder.setText(_translate("recordedFootageMenu", "Load Folder"))
+        self.buttonLoadFolder.setText(_translate("recordedFootageMenu", "Folder"))
         self.label_4.setText(_translate("recordedFootageMenu", ""))
         self.labelThreshhold.setText(_translate("recordedFootageMenu", "Confidence Threshold: "))
         self.labelThreshold2.setText(_translate("recordedFootageMenu", "Not reccomended to be below 90% when saving images"))
@@ -146,16 +147,18 @@ class Ui_recordedFootageMenu(object):
 
     def finish(self):
         threshold = self.detectionThreshold.value() / 100
+        cmd = ""
 
         if(self.mode_selected == "video"):
-            print("./darknet detector demo cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights " + self.video_selected + " -save -thresh %3.2f" %(threshold))
+            cmd = "./darknet detector demo cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights %s -save -thresh %3.2f" %(self.video_selected, threshold)
         elif(self.mode_selected == "folder"):
-            print("./darknet detector demo cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights / -save -folder " + self.folder_selected + " -thresh %3.2f" %(threshold))
+            cmd = "./darknet detector demo cfg/voc.data cfg/yolov3-voc.cfg backup/yolov3-voc_final.weights / -save -folder %s -thresh %3.2f" %(self.folder_selected, threshold)
         elif(self.mode_selected == None):
             print("An error occurred")
         else:
             print("If you see this then worry. Should never happen")
-
+        
+        os.system(cmd)
         exit()
 
 if __name__ == "__main__":
