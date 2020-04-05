@@ -295,7 +295,7 @@ void test_yolo(char *cfgfile, char *weightfile, char *filename, float thresh)
         if (nms) do_nms_sort(dets, l.side*l.side*l.n, l.classes, nms);
 
         int detection_count = 0;
-        draw_detections(im, dets, l.side*l.side*l.n, thresh, voc_names, alphabet, 20, &detection_count, 0);
+        draw_detections(im, dets, l.side*l.side*l.n, thresh, voc_names, alphabet, 20, &detection_count, 0, NULL);
         save_image(im, "predictions");
         show_image(im, "predictions", 0);
         free_detections(dets, nboxes);

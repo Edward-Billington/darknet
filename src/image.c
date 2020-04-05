@@ -237,8 +237,12 @@ image **load_alphabet()
     return alphabets;
 }
 
-void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode)
+void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode, char *post_url)
 {
+    if(NULL != post_url){
+        printf("AAAAAAAAAA\n");
+    }
+    return;
     int i,j;
     size_t max_char_size = 80;
 
@@ -264,7 +268,8 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                     char img_name[128];
                     sprintf(img_name, "screenshots/%s detection %d.jpg", names[j], *detection_count);
                     // save_image_cv(im, img_name);
-                    send_post_request("localhost:3000/testing");
+                    if(NULL != post_url)
+                        send_post_request(post_url);
                 }
             }
         }
