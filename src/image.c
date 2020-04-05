@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "blas.h"
 #include "cuda.h"
+#include "custom_http.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -263,6 +264,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                     char img_name[128];
                     sprintf(img_name, "screenshots/%s detection %d.jpg", names[j], *detection_count);
                     // save_image_cv(im, img_name);
+                    send_post_request("localhost:3000/testing");
                 }
             }
         }

@@ -1,0 +1,2 @@
+/home/edward/Documents/darknet/data/testing_images/knife_image_7.png: Predicted in 0.022218 seconds.
+knife: 100%

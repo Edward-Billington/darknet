@@ -161,6 +161,10 @@ void *detect_loop(void *ptr)
 
 void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen, char filenames[8][128])
 {
+    // if(send_post_request("TESTING")){
+    //     printf("POST sent ");
+    // }
+    // return;
     image **alphabet = load_alphabet();
     demo_names = names;
     demo_alphabet = alphabet;

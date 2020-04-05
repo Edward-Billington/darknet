@@ -21,6 +21,7 @@ darknet
 /backup
 libdarknet.a
 libdarknet.so
+bad.list
 
 # OS Generated #
 .DS_Store*
