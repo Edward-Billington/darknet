@@ -1,0 +1,21 @@
+knife_test_low_res.mp4
+5 - 211 detections above the minimum confidence score of 99.0%
+56.198
+55.949
+55.924
+4 - 203 detections above the minimum confidence score of 99.0%
+55.845
+55.893
+56.040
+3 - 224 detections above the minimum confidence score of 99.0%
+45.771
+45.843
+45.732
+2 - 234 detections above the minimum confidence score of 99.0%
+45.812
+45.806
+45.883
+1 - 155 detections above the minimum confidence score of 99.0%
+18.216
+18.136
+18.108
