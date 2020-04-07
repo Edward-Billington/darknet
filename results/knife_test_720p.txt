@@ -1,0 +1,21 @@
+knife_test_720p
+5 - 216 detections above the minimum confidence score of 99.0%
+21.516
+21.758
+21.742
+4 - 217 detections above the minimum confidence score of 99.0%
+22.015
+21.603
+21.657
+3 - 235 detections above the minimum confidence score of 99.0%
+19.804
+19.888
+19.649
+2 - 240 detections above the minimum confidence score of 99.0%
+19.780
+19.648
+19.752
+1 - 175 detections above the minimum confidence score of 99.0%
+11.908
+11.921
+11.796
