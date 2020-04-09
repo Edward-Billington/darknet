@@ -239,10 +239,6 @@ image **load_alphabet()
 
 void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode, char *post_url)
 {
-    if(NULL != post_url){
-        printf("AAAAAAAAAA\n");
-    }
-    return;
     int i,j;
     size_t max_char_size = 80;
 
@@ -268,8 +264,11 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                     char img_name[128];
                     sprintf(img_name, "screenshots/%s detection %d.jpg", names[j], *detection_count);
                     // save_image_cv(im, img_name);
-                    if(NULL != post_url)
-                        send_post_request(post_url);
+                    if(post_url != NULL) {
+                        send_post_request(post_url, names[j], dets[i].prob[j]*100);
+                    } else {
+                        printf("NO POST REQUEST SENT\n");
+                    }
                 }
             }
         }

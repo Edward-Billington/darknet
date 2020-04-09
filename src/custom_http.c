@@ -3,6 +3,10 @@
     https://stackoverflow.com/questions/22077802/simple-c-example-of-doing-an-http-post-and-consuming-the-response/22135885
     by Jerry Jeremiah
     mofidied by Edward Billington
+
+    Also
+    https://github.com/jacketizer/libyuarel
+    for the URL PARSE
 */
 #include "custom_http.h"
 #include <stdio.h> /* printf, sprintf */
@@ -12,17 +16,37 @@
 #include <sys/socket.h> /* socket, connect */
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h> /* struct hostent, gethostbyname */
+#include <yuarel.h> // URL PARSER
 
-int send_post_request(const char *url)
+int send_post_request(const char *url, const char *class, const float confidence)
 {
+    char *copy_url = malloc(strlen(url) + 1);
+    strcpy(copy_url, url);
+
+    // Using https://github.com/jacketizer/libyuarel. MIT License
+    // struct yuarel url_obj;
+    // url_obj.port = 3000;
+    // url_obj.host = "127.0.0.1";
+    // if (-1 == yuarel_parse(&url_obj, copy_url)) {
+    //     fprintf(stderr, "Could not parse url!\n");
+    //     return 1;
+    // }
+
     int i;
     int portno = 3000;
-    char *host = "localhost";
+    char *host = "127.0.0.1";
     struct hostent *server;
     struct sockaddr_in serv_addr;
-    int sockfd, bytes, sent, received, total, message_size;
-    char response[4096];
-    char *message = "POST /testing HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: 25\r\n\r\n{\"data\":\"Knife Detected\"}";
+    int sockfd, bytes, sent, received, total;
+
+    // Create the message
+    char message[4096];
+    char data[1024];
+
+    // Create JSON
+    sprintf(data, "{\"object\":\"%s\", \"confidence\":\"%.0f\"}", class, confidence);
+    // Create POST                    
+    sprintf(message, "POST /%s HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", "testing", strlen(data), data);
 
     /* create the socket */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -55,6 +79,7 @@ int send_post_request(const char *url)
     } while (sent < total);
 
     /* receive the response */
+    char response[4096];
     memset(response,0,sizeof(response));
     total = sizeof(response)-1;
     received = 0;
@@ -72,6 +97,7 @@ int send_post_request(const char *url)
 
     /* close the socket */
     close(sockfd);
+    free(copy_url);
 
     /* process response */
     // printf("Response:\n%s\n",response);

@@ -728,24 +728,13 @@ void run_detector(int argc, char **argv)
                         }
                     }
 
-                    // IF NO -POST FLAG
-                    if(url){
-                        demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, files, NULL);
-                        return;
-                    }
-
                     demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, files, url);
                     return;
                 }
             }
 
             // Save screenshots of a single video
-            if (filename) {
-                // IF NO -POST FLAG
-                if(url){
-                    demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, NULL, NULL);
-                    return;
-                }
+            if (filename) {                
                 demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, NULL, url);
             }
         }
