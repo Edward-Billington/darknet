@@ -8,6 +8,7 @@
 #include "image.h"
 #include "demo.h"
 #include <sys/time.h>
+#include <yuarel.h> // URL PARSER
 
 #define DEMO 1
 
@@ -38,6 +39,7 @@ static int save_mode = 0;
 static char *cpost_url = NULL;
 static float total_fps = 0;
 static float total_frames = 0;
+static struct yuarel url_obj;
 double demo_time;
 
 detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
@@ -112,7 +114,7 @@ void *detect_in_thread(void *ptr)
         total_frames += 1;
     }
     image display = buff[(buff_index+2) % 3];
-    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, save_mode, cpost_url);
+    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, save_mode, cpost_url, url_obj.port, url_obj.host, url_obj.path);
     free_detections(dets, nboxes);
 
     demo_index = (demo_index + 1)%demo_frame;
@@ -191,10 +193,14 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
     }
     avg = calloc(demo_total, sizeof(float));
 
-    // If there is a POST url then move it to global scope
+    // If there is a POST url
     if (post_url != NULL) {
         cpost_url = post_url;
-    }    
+        if (-1 == yuarel_parse(&url_obj, post_url)) {
+            fprintf(stderr, "Could not parse url!\n");
+            return;
+        }
+    }
 
     // Default case
     if (filenames == NULL) {

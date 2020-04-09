@@ -16,25 +16,10 @@
 #include <sys/socket.h> /* socket, connect */
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h> /* struct hostent, gethostbyname */
-#include <yuarel.h> // URL PARSER
 
-int send_post_request(const char *url, const char *class, const float confidence)
+int send_post_request(int port, char *host, char *path, const char *class, const float confidence)
 {
-    char *copy_url = malloc(strlen(url) + 1);
-    strcpy(copy_url, url);
-
-    // Using https://github.com/jacketizer/libyuarel. MIT License
-    // struct yuarel url_obj;
-    // url_obj.port = 3000;
-    // url_obj.host = "127.0.0.1";
-    // if (-1 == yuarel_parse(&url_obj, copy_url)) {
-    //     fprintf(stderr, "Could not parse url!\n");
-    //     return 1;
-    // }
-
     int i;
-    int portno = 3000;
-    char *host = "127.0.0.1";
     struct hostent *server;
     struct sockaddr_in serv_addr;
     int sockfd, bytes, sent, received, total;
@@ -46,7 +31,7 @@ int send_post_request(const char *url, const char *class, const float confidence
     // Create JSON
     sprintf(data, "{\"object\":\"%s\", \"confidence\":\"%.0f\"}", class, confidence);
     // Create POST                    
-    sprintf(message, "POST /%s HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", "testing", strlen(data), data);
+    sprintf(message, "POST /%s HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", path, strlen(data), data);
 
     /* create the socket */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -59,7 +44,7 @@ int send_post_request(const char *url, const char *class, const float confidence
     /* fill in the structure */
     memset(&serv_addr,0,sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(port);
     memcpy(&serv_addr.sin_addr.s_addr,server->h_addr,server->h_length);
 
     /* connect the socket */
@@ -97,7 +82,7 @@ int send_post_request(const char *url, const char *class, const float confidence
 
     /* close the socket */
     close(sockfd);
-    free(copy_url);
+    // free(copy_url);
 
     /* process response */
     // printf("Response:\n%s\n",response);
