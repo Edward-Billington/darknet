@@ -683,7 +683,6 @@ void run_detector(int argc, char **argv)
         char *name_list = option_find_str(options, "names", "data/names.list");
         char **names = get_labels(name_list);
         if(!find_arg(argc, argv, "-save")){
-            printf("111111111111111111111111\n");
             demo(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
         } else {            
             printf("Save Version Running\n");
@@ -734,7 +733,7 @@ void run_detector(int argc, char **argv)
             }
 
             // Save screenshots of a single video
-            if (filename) {                
+            if (filename) {
                 demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, NULL, url);
             }
         }
