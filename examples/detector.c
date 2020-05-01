@@ -604,7 +604,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         //if (nms) do_nms_obj(boxes, probs, l.w*l.h*l.n, l.classes, nms);
         if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
         int detection_count = 0;
-        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes, &detection_count, 0);
+        draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes, &detection_count, 0, NULL, 0 , "", "");
         free_detections(dets, nboxes);
         if(outfile){
             save_image(im, outfile);
@@ -684,9 +684,12 @@ void run_detector(int argc, char **argv)
         char **names = get_labels(name_list);
         if(!find_arg(argc, argv, "-save")){
             demo(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
-        } else {
+        } else {            
             printf("Save Version Running\n");
             char *folder_name = find_char_arg(argc, argv, "-folder", 0);
+            char *url = find_char_arg(argc, argv, "-POST", 0);
+
+            // Save screenshots on multiple videos
             if (folder_name) {
                 DIR *folder = opendir(folder_name);
                 if (NULL == folder) {
@@ -724,21 +727,14 @@ void run_detector(int argc, char **argv)
                         }
                     }
 
-                    // USE LATER
-                    // for(int i = 0; i < max_files; i++) {
-                    //     if (strcmp(files[i], "")) {
-                    //         printf("%s\n", files[i]);
-                    //     }
-                    // }
-
-                    demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, files);
-
-                    // printf("TEST TEST TEST %s, %s\n", files[0], files[1]);
+                    demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, files, url);
                     return;
                 }
             }
+
+            // Save screenshots of a single video
             if (filename) {
-                demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, NULL);
+                demo_save(cfg, weights, thresh, cam_index, filename, names, classes, frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen, NULL, url);
             }
         }
     } else {

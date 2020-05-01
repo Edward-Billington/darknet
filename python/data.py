@@ -5,10 +5,7 @@ path_to_darknet = "/home/edward/Documents/darknet/"
 images_count = 17
 
 files = {
-	"yolov3-voc_final.weights": "yolov3-voc.cfg",
-	"yolov3-voc-v2_final.weights": "yolov3-voc-v2.cfg",
-	"yolov3-voc-v3_final.weights": "yolov3-voc-v3.cfg",
-	"yolov3-voc-v4_final.weights": "yolov3-voc-v4.cfg",
+	"yolov3-voc-v5_final.weights": "yolov3-voc-v5.cfg"
 }
 
 for file in files:

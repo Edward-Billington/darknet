@@ -8,6 +8,7 @@
 #include "image.h"
 #include "demo.h"
 #include <sys/time.h>
+#include <yuarel.h> // URL PARSER
 
 #define DEMO 1
 
@@ -35,6 +36,10 @@ static int demo_done = 0;
 static int demo_total = 0;
 static int detection_count = 0;
 static int save_mode = 0;
+static char *cpost_url = NULL;
+static float total_fps = 0;
+static float total_frames = 0;
+static struct yuarel url_obj;
 double demo_time;
 
 detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
@@ -102,9 +107,14 @@ void *detect_in_thread(void *ptr)
     printf("\033[2J");
     printf("\033[1;1H");
     printf("\nFPS:%.1f\n",fps);
+    printf("\nTOTAL FPS:%.1f\n",total_fps);
     printf("Objects:\n\n");
+    if (fps < 144.0) {
+        total_fps += fps;
+        total_frames += 1;
+    }
     image display = buff[(buff_index+2) % 3];
-    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, save_mode);
+    draw_detections(display, dets, nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, &detection_count, save_mode, cpost_url, url_obj.port, url_obj.host, url_obj.path);
     free_detections(dets, nboxes);
 
     demo_index = (demo_index + 1)%demo_frame;
@@ -159,12 +169,8 @@ void *detect_loop(void *ptr)
     }
 }
 
-void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen, char filenames[8][128])
+void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int delay, char *prefix, int avg_frames, float hier, int w, int h, int frames, int fullscreen, char filenames[8][128], char *post_url)
 {
-    // if(send_post_request("TESTING")){
-    //     printf("POST sent ");
-    // }
-    // return;
     image **alphabet = load_alphabet();
     demo_names = names;
     demo_alphabet = alphabet;
@@ -186,6 +192,15 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
         predictions[i] = calloc(demo_total, sizeof(float));
     }
     avg = calloc(demo_total, sizeof(float));
+
+    // If there is a POST url
+    if (post_url != NULL) {
+        cpost_url = post_url;
+        if (-1 == yuarel_parse(&url_obj, post_url)) {
+            fprintf(stderr, "Could not parse url!\n");
+            return;
+        }
+    }
 
     // Default case
     if (filenames == NULL) {
@@ -230,10 +245,13 @@ void demo_save(char *cfgfile, char *weightfile, float thresh, int cam_index, con
             ++count;
         }
         printf("%d detections above the minimum confidence score of %.1f%%\n", detection_count, (thresh*100.0));
+        printf("AVERAGE FPS: %.3f\n", total_fps/total_frames);
     } else { // Case for the -folder flag, iterate over each
         for(int i = 0; i < sizeof(filenames); i++) {
             demo_done = 0;
             buff_index = 0;
+            total_fps = 0;
+            total_frames = 0;
             char *current_file = filenames[i];
             
             if (strcmp(current_file, "")) {

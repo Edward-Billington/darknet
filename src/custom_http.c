@@ -3,6 +3,10 @@
     https://stackoverflow.com/questions/22077802/simple-c-example-of-doing-an-http-post-and-consuming-the-response/22135885
     by Jerry Jeremiah
     mofidied by Edward Billington
+
+    Also
+    https://github.com/jacketizer/libyuarel
+    for the URL PARSE
 */
 #include "custom_http.h"
 #include <stdio.h> /* printf, sprintf */
@@ -13,16 +17,21 @@
 #include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
 #include <netdb.h> /* struct hostent, gethostbyname */
 
-int send_post_request(const char *url)
+int send_post_request(int port, char *host, char *path, const char *class, const float confidence)
 {
     int i;
-    int portno = 3000;
-    char *host = "localhost";
     struct hostent *server;
     struct sockaddr_in serv_addr;
-    int sockfd, bytes, sent, received, total, message_size;
-    char response[4096];
-    char *message = "POST /testing HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: 25\r\n\r\n{\"data\":\"Knife Detected\"}";
+    int sockfd, bytes, sent, received, total;
+
+    // Create the message
+    char message[4096];
+    char data[1024];
+
+    // Create JSON
+    sprintf(data, "{\"object\":\"%s\", \"confidence\":\"%.0f\"}", class, confidence);
+    // Create POST                    
+    sprintf(message, "POST /%s HTTP/1.0\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", path, strlen(data), data);
 
     /* create the socket */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -35,7 +44,7 @@ int send_post_request(const char *url)
     /* fill in the structure */
     memset(&serv_addr,0,sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(port);
     memcpy(&serv_addr.sin_addr.s_addr,server->h_addr,server->h_length);
 
     /* connect the socket */
@@ -55,6 +64,7 @@ int send_post_request(const char *url)
     } while (sent < total);
 
     /* receive the response */
+    char response[4096];
     memset(response,0,sizeof(response));
     total = sizeof(response)-1;
     received = 0;
@@ -72,6 +82,7 @@ int send_post_request(const char *url)
 
     /* close the socket */
     close(sockfd);
+    // free(copy_url);
 
     /* process response */
     // printf("Response:\n%s\n",response);

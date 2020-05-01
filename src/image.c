@@ -237,7 +237,7 @@ image **load_alphabet()
     return alphabets;
 }
 
-void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode)
+void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int *detection_count, int save_mode, char *post_url, int port, char *host, char *path)
 {
     int i,j;
     size_t max_char_size = 80;
@@ -263,8 +263,11 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
                 if (1 == save_mode && (strlen(names[j]) < max_char_size)) {
                     char img_name[128];
                     sprintf(img_name, "screenshots/%s detection %d.jpg", names[j], *detection_count);
-                    // save_image_cv(im, img_name);
-                    send_post_request("localhost:3000/testing");
+                    if(post_url != NULL) {
+                        send_post_request(port, host, path, names[j], dets[i].prob[j]*100);
+                    } else {
+                    	save_image_cv(im, img_name);
+		    }
                 }
             }
         }
@@ -311,7 +314,7 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
             if (1 == save_mode && (strlen(labelstr) < max_char_size)) {
                 char img_name[128];
                 sprintf(img_name, "screenshots/label/%s detection %d.jpg", labelstr, *detection_count);
-                // save_image_cv(im, img_name);
+                save_image_cv(im, img_name);
             }
         }
     }
